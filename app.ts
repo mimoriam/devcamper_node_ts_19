@@ -24,11 +24,11 @@ dotenv.config({ path: "./config/config.env" });
 
 export const AppDataSource = new DataSource({
   type: "postgres",
-  host: "localhost",
-  port: 5432,
-  username: "postgres",
-  password: "postgres",
-  database: "node_admin",
+  host: process.env.HOST,
+  port: parseInt(process.env.DB_PORT!),
+  username: process.env.PG_USER,
+  password: process.env.PG_PASS,
+  database: process.env.DATABASE,
   entities: [],
   logging: false,
   // Turn this to false in production:
@@ -41,7 +41,7 @@ const indexRouter = require("./routes/index");
 // Initialize DB:
 AppDataSource.initialize()
   .then(() => {
-    console.log("Successfully connected to Database!")
+    console.log("Successfully connected to Database!");
   })
   .catch((err) => console.log(err));
 
