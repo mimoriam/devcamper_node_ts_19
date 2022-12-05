@@ -25,7 +25,7 @@
     /* Ensure that casing is correct in imports. */
 
     /* Type Checking */
-    "strict": true,
+//    "strict": true,
     /* Enable all strict type-checking options. */
 
     /* Completeness */

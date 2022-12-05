@@ -17,6 +17,7 @@ import path from "path";
 
 import { DataSource } from "typeorm";
 
+import { BootcampSchema } from "./models/Bootcamp.entity";
 import "reflect-metadata";
 
 // Load env vars:
@@ -29,7 +30,7 @@ export const AppDataSource = new DataSource({
   username: process.env.PG_USER,
   password: process.env.PG_PASS,
   database: process.env.DATABASE,
-  entities: [],
+  entities: [BootcampSchema],
   logging: false,
   // Turn this to false in production:
   synchronize: true,
