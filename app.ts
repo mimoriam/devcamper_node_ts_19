@@ -62,3 +62,17 @@ app.use("/api/v1/bootcamps", bootcampRouter);
 app.listen(PORT || 3000, () => {
   console.log(`Listening on port: ${PORT}`);
 });
+
+// Handle unhandled promise rejections:
+process.on("unhandledRejection", (err: any, promise) => {
+  console.log(`Error: ${err.message}`);
+  // Close server & exit process
+  process.exit(1);
+});
+
+// The process manager you’re using will first send a SIGTERM signal
+// to the application to notify it that it will be killed:
+process.on("SIGTERM", () => {
+  console.log("SIGTERM signal received: closing HTTP server");
+  process.exit(1);
+});
