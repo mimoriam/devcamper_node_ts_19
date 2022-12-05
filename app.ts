@@ -36,7 +36,7 @@ export const AppDataSource = new DataSource({
 });
 
 // Route files:
-const indexRouter = require("./routes/index");
+const bootcampRouter = require("./routes/bootcamps.routes");
 
 // Initialize DB:
 AppDataSource.initialize()
@@ -56,7 +56,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 // Mount Routers:
-app.use("/api/v1/index", indexRouter);
+app.use("/api/v1/bootcamps", bootcampRouter);
 
 // Listening on a specific port:
 app.listen(PORT || 3000, () => {
