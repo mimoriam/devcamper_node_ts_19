@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { BootcampSchema } from "../models/Bootcamp.entity";
 import { AppDataSource } from "../app";
+import { validate } from "class-validator";
 
 // @desc      Get all bootcamps
 // @route     GET /api/v1/bootcamps
@@ -30,43 +31,27 @@ exports.createBootcamp = async (
   res: Response,
   next: NextFunction
 ) => {
-  const b_body = {
-    _id: "5d713a66ec8f2b88b8f830b8",
-    user: "5d7a514b5d2c12c7449be046",
-    name: "ModernTech Bootcamp",
-    description:
-      "ModernTech has one goal, and that is to make you a rockstar developer and/or designer with a six figure salary. We teach both development and UI/UX",
-    website: "https://moderntech.com",
-    phone: "(222) 222-2222",
-    email: "enroll@moderntech.com",
-    address: "220 Pawtucket St, Lowell, MA 01854",
-    careers: ["Web Development", "UI/UX", "Mobile Development"],
-    housing: false,
-    jobAssistance: true,
-    jobGuarantee: false,
-    acceptGi: true,
-  };
+  try {
+    const bootcamp = new BootcampSchema();
+    const bootcampRepo = AppDataSource.getRepository(BootcampSchema);
 
-  const bootcamp = new BootcampSchema();
-  const bootcampRepository = AppDataSource.getRepository(BootcampSchema);
+    const entity = Object.assign(bootcamp, req.body);
 
-  bootcamp.name = b_body.name;
-  bootcamp.description = b_body.description;
-  bootcamp.website = b_body.website;
-  bootcamp.phone = b_body.phone;
-  bootcamp.email = b_body.email;
-  bootcamp.address = b_body.address;
-  bootcamp.careers = b_body.careers;
-  bootcamp.housing = b_body.housing;
-  bootcamp.jobAssistance = b_body.jobAssistance;
-  bootcamp.jobGuarantee = b_body.jobGuarantee;
-  bootcamp.acceptGi = b_body.acceptGi;
+    const error = await validate(bootcamp);
 
-  await bootcampRepository.save(bootcamp);
+    if (error.length > 0) {
+      return res.status(400).json({ error: "error" });
+    } else {
+      const savedBootcamp = await bootcampRepo.save(entity);
 
-  return res.status(201).json({
-    bootcamp,
-  });
+      return res.status(201).json({
+        success: true,
+        data: savedBootcamp,
+      });
+    }
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 // @desc      Update bootcamp

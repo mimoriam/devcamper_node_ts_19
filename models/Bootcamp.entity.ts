@@ -3,33 +3,36 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  BeforeInsert,
 } from "typeorm";
 import {
   Max,
+  Min,
   Matches,
   IsString,
   IsEmail,
   IsInt,
-  Length,
+  Length, IsOptional,
 } from "class-validator";
-import { BeforeInsert } from "typeorm";
 import slugify from "slugify";
 
-@Entity()
+@Entity({ name: "bootcamp" })
 export class BootcampSchema {
   @PrimaryGeneratedColumn("uuid")
   id: number;
 
   @Column({ unique: true })
-  @Max(50, { message: "Name can not be more than 50 characters" })
+  @Length(1, 50, { message: "Name can not be more than 50 characters" })
   @IsString()
   name: string;
 
-  @Column({ nullable: true })
+  @Column({ default: "" })
   slug: string;
 
   @Column()
-  @Max(500, { message: "Description can not be more than 500 characters" })
+  @Length(1, 500, {
+    message: "Description can not be more than 500 characters",
+  })
   @IsString()
   description: string;
 
@@ -42,11 +45,13 @@ export class BootcampSchema {
   website: string;
 
   @Column()
-  @Max(20, { message: "Phone number can not be longer than 20 characters" })
+  @Length(6, 20, {
+    message: "Phone number can not be longer than 20 characters",
+  })
   @IsString()
   phone: string;
 
-  @Column()
+  @Column({ unique: true })
   @IsEmail({ message: "Please add a valid email" })
   email: string;
 
@@ -57,11 +62,14 @@ export class BootcampSchema {
   careers: string[];
 
   @Column({ nullable: true })
-  @Length(1, 10)
+  @IsOptional()
+  @Min(1)
+  @Max(10)
   @IsInt()
   averageRating: number;
 
   @Column({ nullable: true })
+  @IsOptional()
   @IsInt()
   averageCost: number;
 
