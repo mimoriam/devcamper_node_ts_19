@@ -10,6 +10,8 @@
 // npm i cookie-parser
 // npm i -D @types/cookie-parser
 
+// npm i slugify
+
 import express, { Express } from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
@@ -31,9 +33,11 @@ export const AppDataSource = new DataSource({
   password: process.env.PG_PASS,
   database: process.env.DATABASE,
   entities: [BootcampSchema],
-  logging: false,
+  logging: ["warn"],
   // Turn this to false in production:
   synchronize: true,
+  // This sets a cache of 1 second (have to set it up per query too):
+  cache: true,
 });
 
 // Route files:

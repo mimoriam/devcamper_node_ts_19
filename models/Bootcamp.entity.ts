@@ -12,14 +12,8 @@ import {
   IsInt,
   Length,
 } from "class-validator";
-
-// export type Career =
-//   | "Web Development"
-//   | "Mobile Development"
-//   | "UI/UX"
-//   | "Data Science"
-//   | "Business"
-//   | "Other";
+import { BeforeInsert } from "typeorm";
+import slugify from "slugify";
 
 @Entity()
 export class BootcampSchema {
@@ -59,18 +53,6 @@ export class BootcampSchema {
   @Column()
   address: string;
 
-  // @Column({
-  //   type: "enum",
-  //   enum: [
-  //     "Web Development",
-  //     "Mobile Development",
-  //     "UI/UX",
-  //     "Data Science",
-  //     "Business",
-  //     "Other",
-  //   ],
-  //   default: "Other",
-  // })
   @Column("simple-array")
   careers: string[];
 
@@ -100,4 +82,9 @@ export class BootcampSchema {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @BeforeInsert()
+  createSlug() {
+    this.slug = slugify(this.name, { lower: true });
+  }
 }
