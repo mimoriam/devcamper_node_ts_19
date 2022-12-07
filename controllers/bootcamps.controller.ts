@@ -1,50 +1,86 @@
 import { Request, Response, NextFunction } from "express";
+
 import { BootcampSchema } from "../models/Bootcamp.entity";
 import { AppDataSource } from "../app";
-import { validate } from "class-validator";
+
 import { asyncHandler } from "../middleware/asyncHandler";
-import {errorHandler} from "../middleware/errorHandler";
+import { validate, ValidationError } from "class-validator";
+import { errorHandler } from "../middleware/errorHandler";
+import { ErrorResponse } from "../utils/errorResponse";
+import { Repository } from "typeorm";
 
 // @desc      Get all bootcamps
 // @route     GET /api/v1/bootcamps
 // @access    Public
-exports.getBootcamps = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<Response> => {
-  return res.status(200).json({ success: true });
-};
+const getBootcamps = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const bootcampRepo: Repository<BootcampSchema> =
+      AppDataSource.getRepository(BootcampSchema);
+
+    const bootcamps: BootcampSchema[] = await bootcampRepo.find({
+      cache: {
+        id: "bootcamp_cache",
+        milliseconds: 2000, // 2 seconds
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      count: bootcamps.length,
+      data: bootcamps,
+    });
+  }
+);
 
 // @desc      Get single bootcamp
 // @route     GET /api/v1/bootcamps/:id
 // @access    Public
-exports.getBootcamp = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {};
+const getBootcamp = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const bootcampRepo: Repository<BootcampSchema> =
+      AppDataSource.getRepository(BootcampSchema);
+
+    const bootcamp: BootcampSchema = await bootcampRepo.findOneBy({
+      id: req.params.id,
+    });
+
+    if (!bootcamp) {
+      return next(
+        new ErrorResponse(`Bootcamp not found with id of ${req.params.id}`, 404)
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      data: bootcamp,
+    });
+  }
+);
 
 // @desc      Create new bootcamp
 // @route     POST /api/v1/bootcamps
 // @access    Private
-exports.createBootcamp = asyncHandler(
+const createBootcamp = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const bootcamp = new BootcampSchema();
-    const bootcampRepo = AppDataSource.getRepository(BootcampSchema);
+    const bootcampRepo: Repository<BootcampSchema> =
+      AppDataSource.getRepository(BootcampSchema);
 
     const entity = Object.assign(bootcamp, req.body);
 
-    const err = await validate(bootcamp, {
+    const err: ValidationError[] = await validate(bootcamp, {
       validationError: { target: false },
     });
 
     if (err.length > 0) {
-        errorHandler(err, req, res, next);
+      errorHandler(err, req, res, next);
     } else {
       const savedBootcamp = await bootcampRepo.save(entity);
 
-      return res.status(201).json({
+      // Remove cache for newly created bootcamp:
+      await AppDataSource.queryResultCache.remove(["bootcamp_cache"]);
+
+      res.status(201).json({
         success: true,
         data: savedBootcamp,
       });
@@ -55,17 +91,70 @@ exports.createBootcamp = asyncHandler(
 // @desc      Update bootcamp
 // @route     PUT /api/v1/bootcamps/:id
 // @access    Private
-exports.updateBootcamp = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {};
+const updateBootcamp = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const bootcampRepo: Repository<BootcampSchema> =
+      AppDataSource.getRepository(BootcampSchema);
+
+    let bootcamp: BootcampSchema = await bootcampRepo.findOneBy({
+      id: req.params.id,
+    });
+
+    if (!bootcamp) {
+      return next(
+        new ErrorResponse(`Bootcamp not found with id of ${req.params.id}`, 404)
+      );
+    }
+
+    await bootcampRepo.update(req.params.id, {
+      ...req.body,
+    });
+
+    bootcamp = await bootcampRepo.findOneBy({
+      id: req.params.id,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: bootcamp,
+    });
+  }
+);
 
 // @desc      Delete bootcamp
 // @route     DELETE /api/v1/bootcamps/:id
 // @access    Private
-exports.deleteBootcamp = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {};
+const deleteBootcamp = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const bootcampRepo: Repository<BootcampSchema> =
+      AppDataSource.getRepository(BootcampSchema);
+
+    let bootcamp: BootcampSchema = await bootcampRepo.findOneBy({
+      id: req.params.id,
+    });
+
+    if (!bootcamp) {
+      return next(
+        new ErrorResponse(`Bootcamp not found with id of ${req.params.id}`, 404)
+      );
+    }
+
+    await bootcampRepo.delete(req.params.id);
+
+    // Remove cache for newly deleted bootcamp:
+    await AppDataSource.queryResultCache.remove(["bootcamp_cache"]);
+
+    res.status(200).json({
+      success: true,
+      data: {},
+    });
+  }
+);
+
+export {
+  getBootcamps,
+  getBootcamp,
+  createBootcamp,
+  updateBootcamp,
+  deleteBootcamp,
+};

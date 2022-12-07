@@ -14,7 +14,6 @@ import {
   Length,
   IsOptional,
   IsBoolean,
-  IsDate,
   IsArray,
   IsNumber,
 } from "class-validator";
@@ -23,7 +22,7 @@ import slugify from "slugify";
 @Entity({ name: "bootcamp" })
 export class BootcampSchema {
   @PrimaryGeneratedColumn("uuid")
-  id: number;
+  id: string;
 
   @Column({ unique: true })
   @Length(1, 50, { message: "Name can not be more than 50 characters" })

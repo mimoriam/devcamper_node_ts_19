@@ -1,13 +1,13 @@
 import { Router } from "express";
-
-const router = Router();
-const {
+import {
   getBootcamps,
   getBootcamp,
   createBootcamp,
   updateBootcamp,
   deleteBootcamp,
-} = require("../controllers/bootcamps.controller");
+} from "../controllers/bootcamps.controller";
+
+const router = Router();
 
 router.route("/").get(getBootcamps).post(createBootcamp);
 
@@ -17,4 +17,4 @@ router
   .put(updateBootcamp)
   .delete(deleteBootcamp);
 
-module.exports = router;
+export { router };

@@ -16,11 +16,12 @@ import express, { Express } from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import path from "path";
-import { errorHandler } from "./middleware/errorHandler";
 
 import { DataSource } from "typeorm";
-
 import { BootcampSchema } from "./models/Bootcamp.entity";
+
+import { errorHandler } from "./middleware/errorHandler";
+
 import "reflect-metadata";
 
 // Load env vars:
@@ -42,7 +43,7 @@ export const AppDataSource = new DataSource({
 });
 
 // Route files:
-const bootcampRouter = require("./routes/bootcamps.routes");
+import { router as bootcampRouter } from "./routes/bootcamps.routes";
 
 // Initialize DB:
 AppDataSource.initialize()
@@ -52,7 +53,7 @@ AppDataSource.initialize()
   .catch((err) => console.log(err));
 
 // Initialize Express App:
-const PORT = process.env.port;
+const PORT: string = process.env.port;
 const app: Express = express();
 
 // Express Middlewares:
