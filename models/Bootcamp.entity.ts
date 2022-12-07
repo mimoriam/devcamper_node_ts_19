@@ -64,7 +64,10 @@ export class BootcampSchema {
   @IsString()
   address: string;
 
-  /* Auto-generated entries start here: */
+  /***
+   * Auto-generated entries start here:
+   * ***/
+
   @Column({ default: "" })
   slug: string;
 
@@ -107,7 +110,9 @@ export class BootcampSchema {
   @IsNumber()
   averageCost: number;
 
-  /* END */
+  /***
+   * END
+   * ***/
 
   @Column("simple-array")
   @IsArray()
