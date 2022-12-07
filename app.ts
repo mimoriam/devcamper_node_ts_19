@@ -12,8 +12,13 @@
 
 // npm i slugify
 
+// npm i node-geocoder
+// npm i -D @types/node-geocoder
+
+import * as dotenv from "dotenv";
+dotenv.config({ path: __dirname + '/config/config.env' });
+
 import express, { Express } from "express";
-import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import path from "path";
 
@@ -23,9 +28,6 @@ import { BootcampSchema } from "./models/Bootcamp.entity";
 import { errorHandler } from "./middleware/errorHandler";
 
 import "reflect-metadata";
-
-// Load env vars:
-dotenv.config({ path: "./config/config.env" });
 
 export const AppDataSource = new DataSource({
   type: "postgres",

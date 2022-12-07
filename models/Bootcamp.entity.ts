@@ -17,7 +17,9 @@ import {
   IsArray,
   IsNumber,
 } from "class-validator";
+
 import slugify from "slugify";
+import { geocoder } from "../utils/nodeGeocoder";
 
 @Entity({ name: "bootcamp" })
 export class BootcampSchema {
@@ -104,5 +106,11 @@ export class BootcampSchema {
   @BeforeInsert()
   createSlug() {
     this.slug = slugify(this.name, { lower: true });
+  }
+
+  @BeforeInsert()
+  async createLoc() {
+    const loc = await geocoder.geocode(this.address);
+    console.log(loc);
   }
 }
