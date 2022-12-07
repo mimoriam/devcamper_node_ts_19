@@ -11,8 +11,12 @@ import {
   Matches,
   IsString,
   IsEmail,
-  IsInt,
-  Length, IsOptional,
+  Length,
+  IsOptional,
+  IsBoolean,
+  IsDate,
+  IsArray,
+  IsNumber,
 } from "class-validator";
 import slugify from "slugify";
 
@@ -53,39 +57,46 @@ export class BootcampSchema {
 
   @Column({ unique: true })
   @IsEmail({ message: "Please add a valid email" })
+  @IsString()
   email: string;
 
   @Column()
+  @IsString()
   address: string;
 
   @Column("simple-array")
+  @IsArray()
   careers: string[];
 
   @Column({ nullable: true })
   @IsOptional()
   @Min(1)
   @Max(10)
-  @IsInt()
+  @IsNumber()
   averageRating: number;
 
   @Column({ nullable: true })
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   averageCost: number;
 
   @Column({ default: "no_photo.jpg" })
   photo: string;
 
   @Column({ default: false })
+  @IsBoolean()
   housing: boolean;
 
   @Column({ default: false })
+  @IsBoolean()
   jobAssistance: boolean;
 
   @Column({ default: false })
+  @IsBoolean()
   jobGuarantee: boolean;
 
   @Column({ default: false })
+  @IsBoolean()
   acceptGi: boolean;
 
   @CreateDateColumn()

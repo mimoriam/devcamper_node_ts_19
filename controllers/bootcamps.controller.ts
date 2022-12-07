@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { BootcampSchema } from "../models/Bootcamp.entity";
 import { AppDataSource } from "../app";
 import { validate } from "class-validator";
+import { asyncHandler } from "../middleware/asyncHandler";
+import {errorHandler} from "../middleware/errorHandler";
 
 // @desc      Get all bootcamps
 // @route     GET /api/v1/bootcamps
@@ -26,21 +28,19 @@ exports.getBootcamp = async (
 // @desc      Create new bootcamp
 // @route     POST /api/v1/bootcamps
 // @access    Private
-exports.createBootcamp = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+exports.createBootcamp = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const bootcamp = new BootcampSchema();
     const bootcampRepo = AppDataSource.getRepository(BootcampSchema);
 
     const entity = Object.assign(bootcamp, req.body);
 
-    const error = await validate(bootcamp);
+    const err = await validate(bootcamp, {
+      validationError: { target: false },
+    });
 
-    if (error.length > 0) {
-      return res.status(400).json({ error: "error" });
+    if (err.length > 0) {
+        errorHandler(err, req, res, next);
     } else {
       const savedBootcamp = await bootcampRepo.save(entity);
 
@@ -49,10 +49,8 @@ exports.createBootcamp = async (
         data: savedBootcamp,
       });
     }
-  } catch (err) {
-    console.log(err);
   }
-};
+);
 
 // @desc      Update bootcamp
 // @route     PUT /api/v1/bootcamps/:id

@@ -16,6 +16,7 @@ import express, { Express } from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import path from "path";
+import { errorHandler } from "./middleware/errorHandler";
 
 import { DataSource } from "typeorm";
 
@@ -33,7 +34,7 @@ export const AppDataSource = new DataSource({
   password: process.env.PG_PASS,
   database: process.env.DATABASE,
   entities: [BootcampSchema],
-  logging: ["warn"],
+  logging: false,
   // Turn this to false in production:
   synchronize: true,
   // This sets a cache of 1 second (have to set it up per query too):
@@ -62,6 +63,9 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Mount Routers:
 app.use("/api/v1/bootcamps", bootcampRouter);
+
+// Use Error Handler:
+app.use(errorHandler);
 
 // Listening on a specific port:
 app.listen(PORT || 3000, () => {
