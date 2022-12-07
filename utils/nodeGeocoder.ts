@@ -5,6 +5,7 @@ const options: Options = {
   httpAdapter: "https",
   apiKey: process.env.GEOCODER_API_KEY,
   formatter: null,
+  timeout: 3000
 };
 
 const geocoder = geo(options);

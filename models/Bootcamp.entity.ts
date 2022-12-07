@@ -1,25 +1,27 @@
 import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
   BeforeInsert,
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
 } from "typeorm";
 import {
+  IsArray,
+  IsBoolean,
+  IsEmail,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
   Max,
   Min,
-  Matches,
-  IsString,
-  IsEmail,
-  Length,
-  IsOptional,
-  IsBoolean,
-  IsArray,
-  IsNumber,
 } from "class-validator";
 
 import slugify from "slugify";
 import { geocoder } from "../utils/nodeGeocoder";
+import { Point } from "geojson";
 
 @Entity({ name: "bootcamp" })
 export class BootcampSchema {
@@ -30,9 +32,6 @@ export class BootcampSchema {
   @Length(1, 50, { message: "Name can not be more than 50 characters" })
   @IsString()
   name: string;
-
-  @Column({ default: "" })
-  slug: string;
 
   @Column()
   @Length(1, 500, {
@@ -65,9 +64,36 @@ export class BootcampSchema {
   @IsString()
   address: string;
 
-  @Column("simple-array")
-  @IsArray()
-  careers: string[];
+  /* Auto-generated entries start here: */
+  @Column({ default: "" })
+  slug: string;
+
+  @Index({ spatial: true })
+  @Column({
+    type: "geography",
+    spatialFeatureType: "Point",
+    srid: 4326,
+    nullable: true,
+  })
+  location: Point;
+
+  @Column()
+  formattedAddress: string;
+
+  @Column()
+  street: string;
+
+  @Column()
+  city: string;
+
+  @Column()
+  state: string;
+
+  @Column()
+  zipcode: string;
+
+  @Column()
+  country: string;
 
   @Column({ nullable: true })
   @IsOptional()
@@ -80,6 +106,12 @@ export class BootcampSchema {
   @IsOptional()
   @IsNumber()
   averageCost: number;
+
+  /* END */
+
+  @Column("simple-array")
+  @IsArray()
+  careers: string[];
 
   @Column({ default: "no_photo.jpg" })
   photo: string;
@@ -111,6 +143,16 @@ export class BootcampSchema {
   @BeforeInsert()
   async createLoc() {
     const loc = await geocoder.geocode(this.address);
-    console.log(loc);
+
+    this.location = {
+      type: "Point",
+      coordinates: [loc[0].longitude, loc[0].latitude],
+    };
+    this.formattedAddress = loc[0].formattedAddress;
+    this.street = loc[0].streetName;
+    this.city = loc[0].city;
+    this.state = loc[0].stateCode;
+    this.zipcode = loc[0].zipcode;
+    this.country = loc[0].countryCode;
   }
 }

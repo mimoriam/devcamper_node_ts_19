@@ -14,6 +14,8 @@
 
 // npm i node-geocoder
 // npm i -D @types/node-geocoder
+// npm install geojson
+// npm install -D @types/geojson
 
 import * as dotenv from "dotenv";
 dotenv.config({ path: __dirname + '/config/config.env' });
