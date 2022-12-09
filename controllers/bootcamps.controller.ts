@@ -20,6 +20,49 @@ const getBootcamps = asyncHandler(
     const bootcampRepo: Repository<BootcampSchema> =
       AppDataSource.getRepository(BootcampSchema);
 
+    // If both filtering + sorting:
+    if (req.query.select && req.query.sort) {
+      const bootcamps = await bootcampRepo
+        .createQueryBuilder()
+        .select([`${req.query.select}`])
+        .orderBy(`${req.query.sort}`)
+        .getRawMany();
+
+      return res.status(200).json({
+        success: true,
+        count: bootcamps.length,
+        data: bootcamps,
+      });
+    }
+
+    // Filtering/Selection:
+    if (req.query.select) {
+      const bootcamps = await bootcampRepo
+        .createQueryBuilder()
+        .select([`${req.query.select}`])
+        .getRawMany();
+
+      return res.status(200).json({
+        success: true,
+        count: bootcamps.length,
+        data: bootcamps,
+      });
+    }
+
+    // Sorting:
+    if (req.query.sort) {
+      const bootcamps = await bootcampRepo
+        .createQueryBuilder()
+        .orderBy(`${req.query.sort}`)
+        .getMany();
+
+      return res.status(200).json({
+        success: true,
+        count: bootcamps.length,
+        data: bootcamps,
+      });
+    }
+
     const bootcamps: BootcampSchema[] = await bootcampRepo.find({
       cache: {
         id: "bootcamp_cache",

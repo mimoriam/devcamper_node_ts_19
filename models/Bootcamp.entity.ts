@@ -82,7 +82,7 @@ export class BootcampSchema {
   })
   location: Point;
 
-  @Column()
+  @Column({ name: "formatted_address" })
   @IsOptional()
   formattedAddress: string;
 
@@ -106,14 +106,14 @@ export class BootcampSchema {
   @IsOptional()
   country: string;
 
-  @Column({ nullable: true })
+  @Column({ name: "average_rating", nullable: true })
   @IsOptional()
   @Min(1)
   @Max(10)
   @IsNumber()
   averageRating: number;
 
-  @Column({ nullable: true })
+  @Column({ name: "average_cost", nullable: true })
   @IsOptional()
   @IsNumber()
   averageCost: number;
@@ -133,19 +133,19 @@ export class BootcampSchema {
   @IsBoolean()
   housing: boolean;
 
-  @Column({ default: false })
+  @Column({ name: "job_assistance", default: false })
   @IsBoolean()
   jobAssistance: boolean;
 
-  @Column({ default: false })
+  @Column({ name: "job_guarantee", default: false })
   @IsBoolean()
   jobGuarantee: boolean;
 
-  @Column({ default: false })
+  @Column({ name: "accept_gi", default: false })
   @IsBoolean()
   acceptGi: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 
   @BeforeInsert()
