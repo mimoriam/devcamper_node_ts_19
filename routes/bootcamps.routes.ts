@@ -15,6 +15,7 @@ import { router as courseRouter } from "./courses.routes";
 router.route("/up").get(seedUpBootcamp);
 router.route("/down").get(seedDownBootcamp);
 
+// Parent router accessing child router:
 router.use("/:bootcampId/courses", courseRouter);
 
 router.route("/").get(getBootcamps).post(createBootcamp);

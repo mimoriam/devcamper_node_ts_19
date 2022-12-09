@@ -43,7 +43,7 @@ export class Course {
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 
-  @ManyToOne(() => Bootcamp, (bootcamp) => bootcamp.courses, {
+  @ManyToOne((type) => Bootcamp, (bootcamp) => bootcamp.courses, {
     nullable: true,
     onDelete: "CASCADE",
   })

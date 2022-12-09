@@ -30,10 +30,14 @@ const getCourses = asyncHandler(
       prev: undefined,
     };
 
-    [data, total] = await courseRepo.findAndCount({
-      take: limit,
-      skip: (page - 1) * limit,
-    });
+
+    [data, total] = await courseRepo
+      .createQueryBuilder("course")
+      .leftJoinAndSelect("course.bootcamp", "bootcamp")
+      .select()
+      .take(limit)
+      .skip((page - 1) * limit)
+      .getManyAndCount();
 
     if (endIndex < total) {
       pagination.next = {

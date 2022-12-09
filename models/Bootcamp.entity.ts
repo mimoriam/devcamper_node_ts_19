@@ -165,7 +165,7 @@ export class Bootcamp {
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 
-  @OneToMany(() => Course, (course) => course.bootcamp, { cascade: true })
+  @OneToMany((type) => Course, (course) => course.bootcamp, { cascade: true })
   courses: Course[];
 
   @BeforeInsert()
