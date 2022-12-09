@@ -17,8 +17,21 @@ import path from "path";
 // @access    Public
 const getBootcamps = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    // {{URL}}/api/v1/bootcamps?select=name,description,housing&sort=name&page=1&limit=5
     const bootcampRepo: Repository<BootcampSchema> =
       AppDataSource.getRepository(BootcampSchema);
+
+    // This is the amount of results per page shown
+    const limit = parseInt(<string>req.query.limit, 10) || 1;
+    const page = parseInt((req.query.page as string) || "1");
+
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    const pagination = {
+      next: undefined,
+      prev: undefined,
+    };
 
     // If both filtering + sorting:
     if (req.query.select && req.query.sort) {
@@ -26,11 +39,36 @@ const getBootcamps = asyncHandler(
         .createQueryBuilder()
         .select([`${req.query.select}`])
         .orderBy(`${req.query.sort}`)
+        .take(limit)
+        .skip((page - 1) * limit)
         .getRawMany();
+
+      const total = await bootcampRepo
+        .createQueryBuilder()
+        .select([`${req.query.select}`])
+        .orderBy(`${req.query.sort}`)
+        .take(limit)
+        .skip((page - 1) * limit)
+        .getCount();
+
+      if (endIndex < total) {
+        pagination.next = {
+          page: page + 1,
+          limit: limit,
+        };
+      }
+
+      if (startIndex > 0) {
+        pagination.prev = {
+          page: page - 1,
+          limit: limit,
+        };
+      }
 
       return res.status(200).json({
         success: true,
-        count: bootcamps.length,
+        count: total,
+        pagination: pagination,
         data: bootcamps,
       });
     }
@@ -40,11 +78,35 @@ const getBootcamps = asyncHandler(
       const bootcamps = await bootcampRepo
         .createQueryBuilder()
         .select([`${req.query.select}`])
+        .take(limit)
+        .skip((page - 1) * limit)
         .getRawMany();
+
+      const total = await bootcampRepo
+        .createQueryBuilder()
+        .select([`${req.query.select}`])
+        .take(limit)
+        .skip((page - 1) * limit)
+        .getCount();
+
+      if (endIndex < total) {
+        pagination.next = {
+          page: page + 1,
+          limit: limit,
+        };
+      }
+
+      if (startIndex > 0) {
+        pagination.prev = {
+          page: page - 1,
+          limit: limit,
+        };
+      }
 
       return res.status(200).json({
         success: true,
-        count: bootcamps.length,
+        count: total,
+        pagination: pagination,
         data: bootcamps,
       });
     }
@@ -54,26 +116,67 @@ const getBootcamps = asyncHandler(
       const bootcamps = await bootcampRepo
         .createQueryBuilder()
         .orderBy(`${req.query.sort}`)
+        .take(limit)
+        .skip((page - 1) * limit)
         .getMany();
+
+      const total = await bootcampRepo
+        .createQueryBuilder()
+        .orderBy(`${req.query.sort}`)
+        .take(limit)
+        .skip((page - 1) * limit)
+        .getCount();
+
+      if (endIndex < total) {
+        pagination.next = {
+          page: page + 1,
+          limit: limit,
+        };
+      }
+
+      if (startIndex > 0) {
+        pagination.prev = {
+          page: page - 1,
+          limit: limit,
+        };
+      }
 
       return res.status(200).json({
         success: true,
-        count: bootcamps.length,
+        count: total,
+        pagination: pagination,
         data: bootcamps,
       });
     }
 
-    const bootcamps: BootcampSchema[] = await bootcampRepo.find({
+    const [data, total] = await bootcampRepo.findAndCount({
+      take: limit,
+      skip: (page - 1) * limit,
       cache: {
         id: "bootcamp_cache",
-        milliseconds: 2000, // 2 seconds
+        milliseconds: 2000,
       },
     });
 
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit: limit,
+      };
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit: limit,
+      };
+    }
+
     res.status(200).json({
       success: true,
-      count: bootcamps.length,
-      data: bootcamps,
+      count: total,
+      pagination: pagination,
+      data: data,
     });
   }
 );
