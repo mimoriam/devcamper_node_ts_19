@@ -10,9 +10,12 @@ import {
 } from "../controllers/bootcamps.controller";
 
 const router = Router();
+import { router as courseRouter } from "./courses.routes";
 
 router.route("/up").get(seedUpBootcamp);
 router.route("/down").get(seedDownBootcamp);
+
+router.use("/:bootcampId/courses", courseRouter);
 
 router.route("/").get(getBootcamps).post(createBootcamp);
 

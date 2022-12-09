@@ -5,7 +5,8 @@ import {
   seedUpCourse,
 } from "../controllers/courses.controller";
 
-const router = Router();
+// Child router:
+const router = Router({ mergeParams: true });
 
 router.route("/up").get(seedUpCourse);
 router.route("/down").get(seedDownCourse);
