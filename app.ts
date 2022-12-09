@@ -48,12 +48,13 @@ export const AppDataSource = new DataSource({
   synchronize: true,
   // This sets a cache of 1 second (have to set it up per query too):
   cache: {
-    duration: 3000 // 3 seconds
+    duration: 3000, // 3 seconds
   },
 });
 
 // Route files:
 import { router as bootcampRouter } from "./routes/bootcamps.routes";
+import { router as courseRouter } from "./routes/courses.routes";
 
 // Initialize DB:
 AppDataSource.initialize()
@@ -74,6 +75,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Mount Routers:
 app.use("/api/v1/bootcamps", bootcampRouter);
+app.use("/api/v1/courses", courseRouter);
 
 // Use Error Handler:
 app.use(errorHandler);

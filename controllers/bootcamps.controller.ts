@@ -1,18 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 
-import { Bootcamp } from "../models/Bootcamp.entity";
 import { AppDataSource } from "../app";
+import { Repository } from "typeorm";
+import { Bootcamp } from "../models/Bootcamp.entity";
 
 import { asyncHandler } from "../middleware/asyncHandler";
 import { validate, ValidationError } from "class-validator";
 import { errorHandler } from "../middleware/errorHandler";
 import { ErrorResponse } from "../utils/errorResponse";
-import {
-  Brackets,
-  Repository,
-  SelectQueryBuilder,
-  WhereExpression,
-} from "typeorm";
 
 import fs from "fs";
 import path from "path";
@@ -138,7 +133,7 @@ const getBootcamps = asyncHandler(
           .where(`to_tsvector(${keys.toString()}) @@ to_tsquery(:value)`, {
             value: `${values.toString()}`,
           })
-            .getMany();
+          .getMany();
       } else if (keys.length === 2) {
         bootcamps = await bootcampRepo
           .createQueryBuilder()
