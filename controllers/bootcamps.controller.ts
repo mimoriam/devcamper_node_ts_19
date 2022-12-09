@@ -321,7 +321,6 @@ const deleteBootcamp = asyncHandler(
 
 const seedUpBootcamp = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    let bootcamp = new Bootcamp();
     const bootcampRepo: Repository<Bootcamp> =
       AppDataSource.getRepository(Bootcamp);
 
