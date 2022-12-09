@@ -9,6 +9,9 @@ import { errorHandler } from "../middleware/errorHandler";
 import { ErrorResponse } from "../utils/errorResponse";
 import { Repository } from "typeorm";
 
+import fs from "fs";
+import path from "path";
+
 // @desc      Get all bootcamps
 // @route     GET /api/v1/bootcamps
 // @access    Public
@@ -151,10 +154,52 @@ const deleteBootcamp = asyncHandler(
   }
 );
 
+const seedUpBootcamp = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    let bootcamp = new BootcampSchema();
+    const bootcampRepo: Repository<BootcampSchema> =
+      AppDataSource.getRepository(BootcampSchema);
+
+    const bootcamps = JSON.parse(
+      fs.readFileSync(
+        `${path.join(__dirname, "../")}/_data/bootcamps.json`,
+        "utf-8"
+      )
+    );
+
+    const bootcampEntities = bootcampRepo.create(bootcamps);
+
+    await AppDataSource.createQueryBuilder()
+      .insert()
+      .into(BootcampSchema)
+      .values(bootcampEntities)
+      .execute();
+
+    res.status(200).json({
+      success: true,
+    });
+  }
+);
+
+const seedDownBootcamp = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const bootcampRepo: Repository<BootcampSchema> =
+      AppDataSource.getRepository(BootcampSchema);
+
+    await bootcampRepo.clear();
+
+    res.status(200).json({
+      success: true,
+    });
+  }
+);
+
 export {
   getBootcamps,
   getBootcamp,
   createBootcamp,
   updateBootcamp,
   deleteBootcamp,
+  seedUpBootcamp,
+  seedDownBootcamp,
 };

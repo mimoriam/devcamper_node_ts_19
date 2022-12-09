@@ -5,6 +5,7 @@ import {
   Entity,
   Index,
   PrimaryGeneratedColumn,
+  PrimaryColumn,
 } from "typeorm";
 import {
   IsArray,
@@ -25,7 +26,8 @@ import { Point } from "geojson";
 
 @Entity({ name: "bootcamp" })
 export class BootcampSchema {
-  @PrimaryGeneratedColumn("uuid")
+  // @PrimaryGeneratedColumn("uuid")
+  @PrimaryColumn()
   id: string;
 
   @Column({ unique: true })
@@ -81,21 +83,27 @@ export class BootcampSchema {
   location: Point;
 
   @Column()
+  @IsOptional()
   formattedAddress: string;
 
   @Column()
+  @IsOptional()
   street: string;
 
   @Column()
+  @IsOptional()
   city: string;
 
   @Column()
+  @IsOptional()
   state: string;
 
   @Column()
+  @IsOptional()
   zipcode: string;
 
   @Column()
+  @IsOptional()
   country: string;
 
   @Column({ nullable: true })

@@ -5,9 +5,14 @@ import {
   createBootcamp,
   updateBootcamp,
   deleteBootcamp,
+  seedUpBootcamp,
+  seedDownBootcamp,
 } from "../controllers/bootcamps.controller";
 
 const router = Router();
+
+router.route("/up").get(seedUpBootcamp);
+router.route("/down").get(seedDownBootcamp);
 
 router.route("/").get(getBootcamps).post(createBootcamp);
 
