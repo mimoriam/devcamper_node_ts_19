@@ -8,15 +8,25 @@ import {
   PrimaryColumn,
   ManyToOne,
 } from "typeorm";
-import { IsArray, IsBoolean, IsNumber, IsString } from "class-validator";
+import { IsBoolean, IsEnum, IsNumber, IsString } from "class-validator";
 import { Bootcamp } from "./Bootcamp.entity";
 
+export enum minimumSkillType {
+  BEGINNER = "beginner",
+  INTERMEDIATE = "intermediate",
+  ADVANCED = "advanced",
+}
+
 @Entity({ name: "courses" })
+@Index(["weeks", "tuition", "minimumSkill", "scholarshipAvailable"], {
+  fulltext: true,
+})
+@Index(["title"], { unique: true, fulltext: true })
 export class Course {
   @PrimaryColumn()
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   @IsString()
   title: string;
 
@@ -25,16 +35,21 @@ export class Course {
   description: string;
 
   @Column()
-  @IsString()
-  weeks: string;
+  @IsNumber()
+  weeks: number;
 
   @Column()
   @IsNumber()
   tuition: number;
 
-  @Column("simple-array", { name: "minimum_skill" })
-  @IsArray()
-  minimumSkill: string[];
+  @Column({
+    type: "enum",
+    enum: minimumSkillType,
+    default: minimumSkillType.BEGINNER,
+    name: "minimum_skill",
+  })
+  @IsEnum(minimumSkillType)
+  minimumSkill: minimumSkillType;
 
   @Column({ name: "scholarship_available", default: false })
   @IsBoolean()

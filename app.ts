@@ -58,7 +58,8 @@ import { router as courseRouter } from "./routes/courses.routes";
 
 // Initialize DB:
 AppDataSource.initialize()
-  .then(() => {
+  .then(async (conn) => {
+    // await conn.query("CREATE DATABASE IF NOT EXISTS");
     console.log("Successfully connected to Database!");
   })
   .catch((err) => console.log(err));
