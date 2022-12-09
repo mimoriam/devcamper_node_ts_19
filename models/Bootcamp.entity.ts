@@ -25,6 +25,22 @@ import { geocoder } from "../utils/nodeGeocoder";
 import { Point } from "geojson";
 
 @Entity({ name: "bootcamp" })
+@Index(
+  [
+    "website",
+    "phone",
+    "formattedAddress",
+    "city",
+    "country",
+    "averageRating",
+    "averageCost",
+    "careers",
+    "createdAt",
+  ],
+  { fulltext: true }
+)
+@Index(["name", "email"], { unique: true, fulltext: true })
+@Index(["location"], { spatial: true })
 export class BootcampSchema {
   // @PrimaryGeneratedColumn("uuid")
   @PrimaryColumn()
@@ -73,7 +89,6 @@ export class BootcampSchema {
   @Column({ default: "" })
   slug: string;
 
-  @Index({ spatial: true })
   @Column({
     type: "geography",
     spatialFeatureType: "Point",

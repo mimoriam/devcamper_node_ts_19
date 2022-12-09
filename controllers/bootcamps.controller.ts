@@ -21,8 +21,50 @@ const getBootcamps = asyncHandler(
     const bootcampRepo: Repository<BootcampSchema> =
       AppDataSource.getRepository(BootcampSchema);
 
+    // TODO: Partially implemented searching by values:
+    // {{URL}}/api/v1/bootcamps?city=Boston
+    if (
+      Object.keys(req.query).length !== 0 &&
+      !req.query.select &&
+      !req.query.sort
+    ) {
+      let keys = Object.keys(req.query).toString();
+      let values = Object.values(req.query).toString();
+
+      // const bootcamps = await bootcampRepo
+      //   .createQueryBuilder()
+      //   .where("city = :city", { city: `${req.query.city}` })
+      //   .getMany();
+
+      // const bootcamps = await bootcampRepo
+      //   .createQueryBuilder()
+      //   .select()
+      //   .where(":city ILIKE :searchQuery", {
+      //     city: `${keys}`,
+      //     searchQuery: `%${values}%`,
+      //   })
+      //   .getMany();
+
+      const bootcamps = await bootcampRepo
+        .createQueryBuilder()
+        .select()
+        .orWhere(
+          `to_tsvector(${keys}::regconfig) @@ to_tsquery(:value::text)`,
+          {
+            keys: `${keys}`,
+            value: `${values}`,
+          }
+        )
+        .getMany();
+
+      return res.status(200).send({
+        success: true,
+        data: bootcamps,
+      });
+    }
+
     // This is the amount of results per page shown
-    const limit = parseInt(<string>req.query.limit, 10) || 1;
+    const limit = parseInt(<string>req.query.limit, 10) || 2;
     const page = parseInt((req.query.page as string) || "1");
 
     let data, total;
