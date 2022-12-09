@@ -18,14 +18,15 @@
 // npm install -D @types/geojson
 
 import * as dotenv from "dotenv";
-dotenv.config({ path: __dirname + '/config/config.env' });
+
+dotenv.config({ path: __dirname + "/config/config.env" });
 
 import express, { Express } from "express";
 import cookieParser from "cookie-parser";
 import path from "path";
 
 import { DataSource } from "typeorm";
-import { BootcampSchema } from "./models/Bootcamp.entity";
+import { Bootcamp } from "./models/Bootcamp.entity";
 
 import { errorHandler } from "./middleware/errorHandler";
 
@@ -38,7 +39,7 @@ export const AppDataSource = new DataSource({
   username: process.env.PG_USER,
   password: process.env.PG_PASS,
   database: process.env.DATABASE,
-  entities: [BootcampSchema],
+  entities: [Bootcamp],
   logging: false,
   // Turn this to false in production:
   synchronize: true,

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 
-import { BootcampSchema } from "../models/Bootcamp.entity";
+import { Bootcamp } from "../models/Bootcamp.entity";
 import { AppDataSource } from "../app";
 
 import { asyncHandler } from "../middleware/asyncHandler";
@@ -18,15 +18,17 @@ import path from "path";
 const getBootcamps = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     // {{URL}}/api/v1/bootcamps?select=name,description,housing&sort=name&page=1&limit=5
-    const bootcampRepo: Repository<BootcampSchema> =
-      AppDataSource.getRepository(BootcampSchema);
+    const bootcampRepo: Repository<Bootcamp> =
+      AppDataSource.getRepository(Bootcamp);
 
     // TODO: Partially implemented searching by values:
     // {{URL}}/api/v1/bootcamps?city=Boston
     if (
       Object.keys(req.query).length !== 0 &&
       !req.query.select &&
-      !req.query.sort
+      !req.query.sort &&
+      req.query.page &&
+      req.query.limit
     ) {
       let keys = Object.keys(req.query).toString();
       let values = Object.values(req.query).toString();
@@ -188,10 +190,10 @@ const getBootcamps = asyncHandler(
 // @access    Public
 const getBootcamp = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const bootcampRepo: Repository<BootcampSchema> =
-      AppDataSource.getRepository(BootcampSchema);
+    const bootcampRepo: Repository<Bootcamp> =
+      AppDataSource.getRepository(Bootcamp);
 
-    const bootcamp: BootcampSchema = await bootcampRepo.findOneBy({
+    const bootcamp: Bootcamp = await bootcampRepo.findOneBy({
       id: req.params.id,
     });
 
@@ -213,9 +215,9 @@ const getBootcamp = asyncHandler(
 // @access    Private
 const createBootcamp = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const bootcamp = new BootcampSchema();
-    const bootcampRepo: Repository<BootcampSchema> =
-      AppDataSource.getRepository(BootcampSchema);
+    const bootcamp = new Bootcamp();
+    const bootcampRepo: Repository<Bootcamp> =
+      AppDataSource.getRepository(Bootcamp);
 
     const entity = Object.assign(bootcamp, req.body);
 
@@ -244,31 +246,43 @@ const createBootcamp = asyncHandler(
 // @access    Private
 const updateBootcamp = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const bootcampRepo: Repository<BootcampSchema> =
-      AppDataSource.getRepository(BootcampSchema);
+    const bootcampRepo: Repository<Bootcamp> =
+      AppDataSource.getRepository(Bootcamp);
 
-    let bootcamp: BootcampSchema = await bootcampRepo.findOneBy({
+    let bootcampToUpdate: Bootcamp = await bootcampRepo.findOneBy({
       id: req.params.id,
     });
 
-    if (!bootcamp) {
+    if (!bootcampToUpdate) {
       return next(
         new ErrorResponse(`Bootcamp not found with id of ${req.params.id}`, 404)
       );
     }
 
-    await bootcampRepo.update(req.params.id, {
-      ...req.body,
+    const bootcamp = new Bootcamp();
+    const entity = Object.assign(bootcamp, req.body);
+
+    const err: ValidationError[] = await validate(bootcampToUpdate, {
+      validationError: { target: false },
+      skipMissingProperties: true,
     });
 
-    bootcamp = await bootcampRepo.findOneBy({
-      id: req.params.id,
-    });
+    if (err.length > 0) {
+      errorHandler(err, req, res, next);
+    } else {
+        await bootcampRepo.update(req.params.id, {
+          ...req.body,
+        });
 
-    res.status(200).json({
-      success: true,
-      data: bootcamp,
-    });
+      bootcampToUpdate = await bootcampRepo.findOneBy({
+        id: req.params.id,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: bootcampToUpdate,
+      });
+    }
   }
 );
 
@@ -277,10 +291,10 @@ const updateBootcamp = asyncHandler(
 // @access    Private
 const deleteBootcamp = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const bootcampRepo: Repository<BootcampSchema> =
-      AppDataSource.getRepository(BootcampSchema);
+    const bootcampRepo: Repository<Bootcamp> =
+      AppDataSource.getRepository(Bootcamp);
 
-    let bootcamp: BootcampSchema = await bootcampRepo.findOneBy({
+    let bootcamp: Bootcamp = await bootcampRepo.findOneBy({
       id: req.params.id,
     });
 
@@ -304,9 +318,9 @@ const deleteBootcamp = asyncHandler(
 
 const seedUpBootcamp = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    let bootcamp = new BootcampSchema();
-    const bootcampRepo: Repository<BootcampSchema> =
-      AppDataSource.getRepository(BootcampSchema);
+    let bootcamp = new Bootcamp();
+    const bootcampRepo: Repository<Bootcamp> =
+      AppDataSource.getRepository(Bootcamp);
 
     const bootcamps = JSON.parse(
       fs.readFileSync(
@@ -319,7 +333,7 @@ const seedUpBootcamp = asyncHandler(
 
     await AppDataSource.createQueryBuilder()
       .insert()
-      .into(BootcampSchema)
+      .into(Bootcamp)
       .values(bootcampEntities)
       .execute();
 
@@ -331,8 +345,8 @@ const seedUpBootcamp = asyncHandler(
 
 const seedDownBootcamp = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const bootcampRepo: Repository<BootcampSchema> =
-      AppDataSource.getRepository(BootcampSchema);
+    const bootcampRepo: Repository<Bootcamp> =
+      AppDataSource.getRepository(Bootcamp);
 
     await bootcampRepo.clear();
 

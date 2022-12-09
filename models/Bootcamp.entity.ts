@@ -24,7 +24,7 @@ import slugify from "slugify";
 import { geocoder } from "../utils/nodeGeocoder";
 import { Point } from "geojson";
 
-@Entity({ name: "bootcamp" })
+@Entity({ name: "bootcamps" })
 @Index(
   [
     "website",
@@ -41,7 +41,7 @@ import { Point } from "geojson";
 )
 @Index(["name", "email"], { unique: true, fulltext: true })
 @Index(["location"], { spatial: true })
-export class BootcampSchema {
+export class Bootcamp {
   // @PrimaryGeneratedColumn("uuid")
   @PrimaryColumn()
   id: string;
