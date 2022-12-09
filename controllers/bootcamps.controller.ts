@@ -25,6 +25,8 @@ const getBootcamps = asyncHandler(
     const limit = parseInt(<string>req.query.limit, 10) || 1;
     const page = parseInt((req.query.page as string) || "1");
 
+    let data, total;
+
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
 
@@ -43,27 +45,13 @@ const getBootcamps = asyncHandler(
         .skip((page - 1) * limit)
         .getRawMany();
 
-      const total = await bootcampRepo
+      total = await bootcampRepo
         .createQueryBuilder()
         .select([`${req.query.select}`])
         .orderBy(`${req.query.sort}`)
         .take(limit)
         .skip((page - 1) * limit)
         .getCount();
-
-      if (endIndex < total) {
-        pagination.next = {
-          page: page + 1,
-          limit: limit,
-        };
-      }
-
-      if (startIndex > 0) {
-        pagination.prev = {
-          page: page - 1,
-          limit: limit,
-        };
-      }
 
       return res.status(200).json({
         success: true,
@@ -82,26 +70,12 @@ const getBootcamps = asyncHandler(
         .skip((page - 1) * limit)
         .getRawMany();
 
-      const total = await bootcampRepo
+      total = await bootcampRepo
         .createQueryBuilder()
         .select([`${req.query.select}`])
         .take(limit)
         .skip((page - 1) * limit)
         .getCount();
-
-      if (endIndex < total) {
-        pagination.next = {
-          page: page + 1,
-          limit: limit,
-        };
-      }
-
-      if (startIndex > 0) {
-        pagination.prev = {
-          page: page - 1,
-          limit: limit,
-        };
-      }
 
       return res.status(200).json({
         success: true,
@@ -120,26 +94,12 @@ const getBootcamps = asyncHandler(
         .skip((page - 1) * limit)
         .getMany();
 
-      const total = await bootcampRepo
+      total = await bootcampRepo
         .createQueryBuilder()
         .orderBy(`${req.query.sort}`)
         .take(limit)
         .skip((page - 1) * limit)
         .getCount();
-
-      if (endIndex < total) {
-        pagination.next = {
-          page: page + 1,
-          limit: limit,
-        };
-      }
-
-      if (startIndex > 0) {
-        pagination.prev = {
-          page: page - 1,
-          limit: limit,
-        };
-      }
 
       return res.status(200).json({
         success: true,
@@ -149,7 +109,7 @@ const getBootcamps = asyncHandler(
       });
     }
 
-    const [data, total] = await bootcampRepo.findAndCount({
+    [data, total] = await bootcampRepo.findAndCount({
       take: limit,
       skip: (page - 1) * limit,
       cache: {
