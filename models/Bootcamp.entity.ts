@@ -6,6 +6,7 @@ import {
   Index,
   PrimaryGeneratedColumn,
   PrimaryColumn,
+  OneToMany,
 } from "typeorm";
 import {
   IsArray,
@@ -23,6 +24,7 @@ import {
 import slugify from "slugify";
 import { geocoder } from "../utils/nodeGeocoder";
 import { Point } from "geojson";
+import { Course } from "./Course.entity";
 
 @Entity({ name: "bootcamps" })
 @Index(
@@ -162,6 +164,9 @@ export class Bootcamp {
 
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
+
+  @OneToMany(() => Course, (course) => course.bootcamp, { cascade: true })
+  courses: Course[];
 
   @BeforeInsert()
   createSlug() {

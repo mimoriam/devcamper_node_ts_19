@@ -17,6 +17,8 @@
 // npm install geojson
 // npm install -D @types/geojson
 
+// npm i typeorm-relations
+
 import * as dotenv from "dotenv";
 
 dotenv.config({ path: __dirname + "/config/config.env" });
