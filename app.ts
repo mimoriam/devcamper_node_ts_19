@@ -27,6 +27,7 @@ import path from "path";
 
 import { DataSource } from "typeorm";
 import { Bootcamp } from "./models/Bootcamp.entity";
+import { Course } from "./models/Course.entity";
 
 import { errorHandler } from "./middleware/errorHandler";
 
@@ -39,12 +40,14 @@ export const AppDataSource = new DataSource({
   username: process.env.PG_USER,
   password: process.env.PG_PASS,
   database: process.env.DATABASE,
-  entities: [Bootcamp],
+  entities: [Bootcamp, Course],
   logging: false,
   // Turn this to false in production:
   synchronize: true,
   // This sets a cache of 1 second (have to set it up per query too):
-  cache: true,
+  cache: {
+    duration: 3000 // 3 seconds
+  },
 });
 
 // Route files:

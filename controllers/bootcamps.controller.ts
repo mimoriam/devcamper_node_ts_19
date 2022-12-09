@@ -7,7 +7,12 @@ import { asyncHandler } from "../middleware/asyncHandler";
 import { validate, ValidationError } from "class-validator";
 import { errorHandler } from "../middleware/errorHandler";
 import { ErrorResponse } from "../utils/errorResponse";
-import { Repository } from "typeorm";
+import {
+  Brackets,
+  Repository,
+  SelectQueryBuilder,
+  WhereExpression,
+} from "typeorm";
 
 import fs from "fs";
 import path from "path";
@@ -20,50 +25,6 @@ const getBootcamps = asyncHandler(
     // {{URL}}/api/v1/bootcamps?select=name,description,housing&sort=name&page=1&limit=5
     const bootcampRepo: Repository<Bootcamp> =
       AppDataSource.getRepository(Bootcamp);
-
-    // TODO: Partially implemented searching by values:
-    // {{URL}}/api/v1/bootcamps?city=Boston
-    if (
-      Object.keys(req.query).length !== 0 &&
-      !req.query.select &&
-      !req.query.sort &&
-      req.query.page &&
-      req.query.limit
-    ) {
-      let keys = Object.keys(req.query).toString();
-      let values = Object.values(req.query).toString();
-
-      // const bootcamps = await bootcampRepo
-      //   .createQueryBuilder()
-      //   .where("city = :city", { city: `${req.query.city}` })
-      //   .getMany();
-
-      // const bootcamps = await bootcampRepo
-      //   .createQueryBuilder()
-      //   .select()
-      //   .where(":city ILIKE :searchQuery", {
-      //     city: `${keys}`,
-      //     searchQuery: `%${values}%`,
-      //   })
-      //   .getMany();
-
-      const bootcamps = await bootcampRepo
-        .createQueryBuilder()
-        .select()
-        .orWhere(
-          `to_tsvector(${keys}::regconfig) @@ to_tsquery(:value::text)`,
-          {
-            keys: `${keys}`,
-            value: `${values}`,
-          }
-        )
-        .getMany();
-
-      return res.status(200).send({
-        success: true,
-        data: bootcamps,
-      });
-    }
 
     // This is the amount of results per page shown
     const limit = parseInt(<string>req.query.limit, 10) || 2;
@@ -153,13 +114,60 @@ const getBootcamps = asyncHandler(
       });
     }
 
+    // if Filtering:
+    // {{URL}}/api/v1/bootcamps?filter[name]=Devcentral&filter[city]=Kingston
+    // if (
+    //   Object.keys(req.query).length !== 0 &&
+    //   !req.query.select &&
+    //   !req.query.sort &&
+    //   !req.query.page &&
+    //   !req.query.limit
+    // ) {
+    if (req.query.filter) {
+      let keys = Object.keys(req.query.filter);
+      let values = Object.values(req.query.filter);
+      let bootcamps;
+
+      console.log(req.query.filter);
+      console.log(keys[1]);
+
+      if (keys.length === 1) {
+        bootcamps = await bootcampRepo
+          .createQueryBuilder()
+          .select()
+          .where(`to_tsvector(${keys.toString()}) @@ to_tsquery(:value)`, {
+            value: `${values.toString()}`,
+          })
+            .getMany();
+      } else if (keys.length === 2) {
+        bootcamps = await bootcampRepo
+          .createQueryBuilder()
+          .select()
+          .where(`to_tsvector(${keys[0].toString()}) @@ to_tsquery(:value)`, {
+            value: `${values[0].toString()}`,
+          })
+          .andWhere(
+            `to_tsvector(${keys[1].toString()}) @@ to_tsquery(:value_two)`,
+            {
+              value_two: `${values[1].toString()}`,
+            }
+          )
+          .getMany();
+      }
+
+      return res.status(200).send({
+        success: true,
+        data: bootcamps,
+      });
+    }
+
     [data, total] = await bootcampRepo.findAndCount({
       take: limit,
       skip: (page - 1) * limit,
-      cache: {
-        id: "bootcamp_cache",
-        milliseconds: 2000,
-      },
+      // cache: {
+      //   id: "bootcamp_cache",
+      //   milliseconds: 2000,
+      // },
     });
 
     if (endIndex < total) {
@@ -270,9 +278,9 @@ const updateBootcamp = asyncHandler(
     if (err.length > 0) {
       errorHandler(err, req, res, next);
     } else {
-        await bootcampRepo.update(req.params.id, {
-          ...req.body,
-        });
+      await bootcampRepo.update(req.params.id, {
+        ...req.body,
+      });
 
       bootcampToUpdate = await bootcampRepo.findOneBy({
         id: req.params.id,
