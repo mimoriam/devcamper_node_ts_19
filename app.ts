@@ -19,6 +19,9 @@
 
 // npm i typeorm-relations
 
+// npm i multer
+// npm i -D @types/multer
+
 import * as dotenv from "dotenv";
 
 dotenv.config({ path: __dirname + "/config/config.env" });

@@ -12,6 +12,62 @@ import { ErrorResponse } from "../utils/errorResponse";
 import fs from "fs";
 import path from "path";
 
+import multer from "multer";
+
+const multerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "public/uploads");
+  },
+  filename: (req, file, cb) => {
+    // user-{user_ID}-{timestamp}.jpeg
+    const ext = file.mimetype.split("/")[1];
+    cb(null, `user-${req.params.id}-${Date.now()}.${ext}`);
+  },
+});
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image")) {
+    cb(null, true);
+  } else {
+    cb(new ErrorResponse(`Please upload an image file`, 400), false);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  limits: { fileSize: 1000000 }, // 1 MiB
+  fileFilter: multerFilter,
+});
+
+// @desc      Upload photo for bootcamp using Multer
+// @route     PUT /api/v1/bootcamps/:id/multer
+// @access    Private
+const uploadViaMulter = upload.single("photo");
+const bootcampMulterUpload = asyncHandler(async (req, res, next) => {
+  const bootcampRepo: Repository<Bootcamp> =
+    AppDataSource.getRepository(Bootcamp);
+
+  let bootcampToUpdate: Bootcamp = await bootcampRepo.findOneBy({
+    id: req.params.id,
+  });
+
+  if (!bootcampToUpdate) {
+    return next(
+      new ErrorResponse(`Bootcamp not found with id of ${req.params.id}`, 404)
+    );
+  }
+  const file = req.file;
+
+  await bootcampRepo.update(req.params.id, {
+    photo: file.filename,
+  });
+
+  res.status(200).json({
+    success: true,
+    file: file.filename,
+  });
+});
+
 // @desc      Get all bootcamps
 // @route     GET /api/v1/bootcamps
 // @access    Public
@@ -453,4 +509,6 @@ export {
   deleteBootcamp,
   seedUpBootcamp,
   seedDownBootcamp,
+  uploadViaMulter,
+  bootcampMulterUpload,
 };

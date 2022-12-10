@@ -7,6 +7,8 @@ import {
   deleteBootcamp,
   seedUpBootcamp,
   seedDownBootcamp,
+  uploadViaMulter,
+  bootcampMulterUpload,
 } from "../controllers/bootcamps.controller";
 
 const router = Router();
@@ -25,5 +27,7 @@ router
   .get(getBootcamp)
   .put(updateBootcamp)
   .delete(deleteBootcamp);
+
+router.route("/:id/multer").put(uploadViaMulter, bootcampMulterUpload);
 
 export { router };
