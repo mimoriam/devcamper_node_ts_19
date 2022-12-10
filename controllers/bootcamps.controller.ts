@@ -22,7 +22,7 @@ const getBootcamps = asyncHandler(
       AppDataSource.getRepository(Bootcamp);
 
     // This is the amount of results per page shown
-    const limit = parseInt(<string>req.query.limit, 10) || 2;
+    const limit = parseInt(<string>req.query.limit, 10) || 4;
     const page = parseInt((req.query.page as string) || "1");
 
     let data, total;
@@ -35,10 +35,96 @@ const getBootcamps = asyncHandler(
       prev: undefined,
     };
 
+    // If Filter + Select + Sorting:
+    if (req.query.filter && req.query.select && req.query.sort) {
+      // {{URL}}/api/v1/bootcamps?filter[name]=Devcentral&filter[city]=Kingston&select=name,course.title&sort=course.title
+
+      let keys = Object.keys(req.query.filter);
+      let values = Object.values(req.query.filter);
+      let bootcamps, total;
+
+      if (keys.length === 1) {
+        bootcamps = await bootcampRepo
+          .createQueryBuilder("bootcamp")
+          .leftJoinAndSelect("bootcamp.courses", "course")
+          .select([`${req.query.select}`])
+          .orderBy(`${req.query.sort}`)
+          .take(limit)
+          .skip((page - 1) * limit)
+          .where(`to_tsvector(${keys.toString()}) @@ to_tsquery(:value)`, {
+            value: `${values.toString()}`,
+          })
+          .getRawMany();
+
+        total = await bootcampRepo
+          .createQueryBuilder("bootcamp")
+          .leftJoinAndSelect("bootcamp.courses", "course")
+          .select([`${req.query.select}`])
+          .orderBy(`${req.query.sort}`)
+          .take(limit)
+          .skip((page - 1) * limit)
+          .where(`to_tsvector(${keys[0].toString()}) @@ to_tsquery(:value)`, {
+            value: `${values[0].toString()}`,
+          })
+          .andWhere(
+            `to_tsvector(${keys[1].toString()}) @@ to_tsquery(:value_two)`,
+            {
+              value_two: `${values[1].toString()}`,
+            }
+          )
+          .getCount();
+      } else if (keys.length === 2) {
+        bootcamps = await bootcampRepo
+          .createQueryBuilder("bootcamp")
+          .leftJoinAndSelect("bootcamp.courses", "course")
+          .select([`${req.query.select}`])
+          .orderBy(`${req.query.sort}`)
+          .take(limit)
+          .skip((page - 1) * limit)
+          .where(`to_tsvector(${keys[0].toString()}) @@ to_tsquery(:value)`, {
+            value: `${values[0].toString()}`,
+          })
+          .andWhere(
+            `to_tsvector(${keys[1].toString()}) @@ to_tsquery(:value_two)`,
+            {
+              value_two: `${values[1].toString()}`,
+            }
+          )
+          .getRawMany();
+
+        total = await bootcampRepo
+          .createQueryBuilder("bootcamp")
+          .leftJoinAndSelect("bootcamp.courses", "course")
+          .select([`${req.query.select}`])
+          .orderBy(`${req.query.sort}`)
+          .take(limit)
+          .skip((page - 1) * limit)
+          .where(`to_tsvector(${keys[0].toString()}) @@ to_tsquery(:value)`, {
+            value: `${values[0].toString()}`,
+          })
+          .andWhere(
+            `to_tsvector(${keys[1].toString()}) @@ to_tsquery(:value_two)`,
+            {
+              value_two: `${values[1].toString()}`,
+            }
+          )
+          .getCount();
+      }
+
+      return res.status(200).json({
+        success: true,
+        count: total,
+        pagination: pagination,
+        data: bootcamps,
+      });
+    }
+
     // If both filtering + sorting:
     if (req.query.select && req.query.sort) {
+      // {{URL}}/api/v1/bootcamps?select=name,course.title&sort=course.title
       const bootcamps = await bootcampRepo
-        .createQueryBuilder()
+        .createQueryBuilder("bootcamp")
+        .leftJoinAndSelect("bootcamp.courses", "course")
         .select([`${req.query.select}`])
         .orderBy(`${req.query.sort}`)
         .take(limit)
@@ -46,7 +132,8 @@ const getBootcamps = asyncHandler(
         .getRawMany();
 
       total = await bootcampRepo
-        .createQueryBuilder()
+        .createQueryBuilder("bootcamp")
+        .leftJoinAndSelect("bootcamp.courses", "course")
         .select([`${req.query.select}`])
         .orderBy(`${req.query.sort}`)
         .take(limit)
@@ -63,15 +150,18 @@ const getBootcamps = asyncHandler(
 
     // Filtering/Selection:
     if (req.query.select) {
+      // {{URL}}/api/v1/bootcamps?select=name,course.title
       const bootcamps = await bootcampRepo
-        .createQueryBuilder()
+        .createQueryBuilder("bootcamp")
+        .leftJoinAndSelect("bootcamp.courses", "course")
         .select([`${req.query.select}`])
         .take(limit)
         .skip((page - 1) * limit)
         .getRawMany();
 
       total = await bootcampRepo
-        .createQueryBuilder()
+        .createQueryBuilder("bootcamp")
+        .leftJoinAndSelect("bootcamp.courses", "course")
         .select([`${req.query.select}`])
         .take(limit)
         .skip((page - 1) * limit)
@@ -88,14 +178,16 @@ const getBootcamps = asyncHandler(
     // Sorting:
     if (req.query.sort) {
       const bootcamps = await bootcampRepo
-        .createQueryBuilder()
+        .createQueryBuilder("bootcamp")
+        .leftJoinAndSelect("bootcamp.courses", "course")
         .orderBy(`${req.query.sort}`)
         .take(limit)
         .skip((page - 1) * limit)
         .getMany();
 
       total = await bootcampRepo
-        .createQueryBuilder()
+        .createQueryBuilder("bootcamp")
+        .leftJoinAndSelect("bootcamp.courses", "course")
         .orderBy(`${req.query.sort}`)
         .take(limit)
         .skip((page - 1) * limit)
@@ -111,24 +203,15 @@ const getBootcamps = asyncHandler(
 
     // if Filtering:
     // {{URL}}/api/v1/bootcamps?filter[name]=Devcentral&filter[city]=Kingston
-    // if (
-    //   Object.keys(req.query).length !== 0 &&
-    //   !req.query.select &&
-    //   !req.query.sort &&
-    //   !req.query.page &&
-    //   !req.query.limit
-    // ) {
     if (req.query.filter) {
       let keys = Object.keys(req.query.filter);
       let values = Object.values(req.query.filter);
       let bootcamps;
 
-      console.log(req.query.filter);
-      console.log(keys[1]);
-
       if (keys.length === 1) {
         bootcamps = await bootcampRepo
-          .createQueryBuilder()
+          .createQueryBuilder("bootcamp")
+          .leftJoinAndSelect("bootcamp.courses", "course")
           .select()
           .where(`to_tsvector(${keys.toString()}) @@ to_tsquery(:value)`, {
             value: `${values.toString()}`,
@@ -136,7 +219,8 @@ const getBootcamps = asyncHandler(
           .getMany();
       } else if (keys.length === 2) {
         bootcamps = await bootcampRepo
-          .createQueryBuilder()
+          .createQueryBuilder("bootcamp")
+          .leftJoinAndSelect("bootcamp.courses", "course")
           .select()
           .where(`to_tsvector(${keys[0].toString()}) @@ to_tsquery(:value)`, {
             value: `${values[0].toString()}`,
@@ -157,6 +241,9 @@ const getBootcamps = asyncHandler(
     }
 
     [data, total] = await bootcampRepo.findAndCount({
+      relations: {
+        courses: true,
+      },
       take: limit,
       skip: (page - 1) * limit,
       // cache: {
