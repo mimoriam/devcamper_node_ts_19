@@ -22,6 +22,12 @@
 // npm i multer
 // npm i -D @types/multer
 
+/*** Auth stuff:
+ *
+ * npm i bcryptjs jsonwebtoken cookie-parser
+ * npm i -D @types/bcryptjs @types/jsonwebtoken @types/cookie-parser
+ *
+ ***/
 import * as dotenv from "dotenv";
 
 dotenv.config({ path: __dirname + "/config/config.env" });
@@ -33,6 +39,7 @@ import path from "path";
 import { DataSource } from "typeorm";
 import { Bootcamp } from "./models/Bootcamp.entity";
 import { Course, CourseSubscriber } from "./models/Course.entity";
+import { User } from "./models/User.entity";
 
 import { errorHandler } from "./middleware/errorHandler";
 
@@ -45,7 +52,7 @@ export const AppDataSource = new DataSource({
   username: process.env.PG_USER,
   password: process.env.PG_PASS,
   database: process.env.DATABASE,
-  entities: [Bootcamp, Course],
+  entities: [Bootcamp, Course, User],
   subscribers: [CourseSubscriber],
   logging: false,
   // Turn this to false in production:
@@ -59,6 +66,7 @@ export const AppDataSource = new DataSource({
 // Route files:
 import { router as bootcampRouter } from "./routes/bootcamps.routes";
 import { router as courseRouter } from "./routes/courses.routes";
+import { router as authRouter } from "./routes/auth.routes";
 
 // Initialize DB:
 AppDataSource.initialize()
@@ -81,6 +89,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // Mount Routers:
 app.use("/api/v1/bootcamps", bootcampRouter);
 app.use("/api/v1/courses", courseRouter);
+app.use("/api/v1/auth", authRouter);
 
 // Use Error Handler:
 app.use(errorHandler);

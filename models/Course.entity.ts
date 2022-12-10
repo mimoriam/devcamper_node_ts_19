@@ -9,7 +9,6 @@ import {
   EntitySubscriberInterface,
   EventSubscriber,
   InsertEvent,
-  Repository,
 } from "typeorm";
 import { IsBoolean, IsEnum, IsNumber, IsString } from "class-validator";
 import { Bootcamp } from "./Bootcamp.entity";
