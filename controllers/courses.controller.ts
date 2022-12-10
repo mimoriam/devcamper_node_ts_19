@@ -134,6 +134,77 @@ const addCourse = asyncHandler(
   }
 );
 
+// @desc      Update course
+// @route     PUT /api/v1/courses/:id
+// @access    Private
+
+const updateCourse = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const courseRepo: Repository<Course> = AppDataSource.getRepository(Course);
+
+    let courseToUpdate = await courseRepo.findOneBy({
+      id: req.params.id,
+    });
+
+    if (!courseToUpdate) {
+      return next(
+        new ErrorResponse(`Course not found with id of ${req.params.id}`, 404)
+      );
+    }
+
+    const course = new Course();
+    const entity = Object.assign(course, req.body);
+
+    const err: ValidationError[] = await validate(courseToUpdate, {
+      validationError: { target: false },
+      skipMissingProperties: true,
+    });
+
+    if (err.length > 0) {
+      errorHandler(err, req, res, next);
+    } else {
+      await courseRepo.update(req.params.id, {
+        ...req.body,
+      });
+
+      courseToUpdate = await courseRepo.findOneBy({
+        id: req.params.id,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: courseToUpdate,
+      });
+    }
+  }
+);
+
+// @desc      Delete course
+// @route     DELETE /api/v1/courses/:id
+// @access    Private
+const deleteCourse = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const courseRepo: Repository<Course> = AppDataSource.getRepository(Course);
+
+    let course = await courseRepo.findOneBy({
+      id: req.params.id,
+    });
+
+    if (!course) {
+      return next(
+        new ErrorResponse(`Course not found with id of ${req.params.id}`, 404)
+      );
+    }
+
+    await courseRepo.delete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      data: {},
+    });
+  }
+);
+
 const seedUpCourse = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const courseRepo: Repository<Course> = AppDataSource.getRepository(Course);
@@ -171,4 +242,12 @@ const seedDownCourse = asyncHandler(
   }
 );
 
-export { getCourses, seedUpCourse, seedDownCourse, addCourse, getCourse };
+export {
+  getCourses,
+  seedUpCourse,
+  seedDownCourse,
+  addCourse,
+  getCourse,
+  updateCourse,
+  deleteCourse,
+};
