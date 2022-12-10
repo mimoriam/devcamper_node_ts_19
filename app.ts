@@ -29,7 +29,7 @@ import path from "path";
 
 import { DataSource } from "typeorm";
 import { Bootcamp } from "./models/Bootcamp.entity";
-import { Course } from "./models/Course.entity";
+import { Course, CourseSubscriber } from "./models/Course.entity";
 
 import { errorHandler } from "./middleware/errorHandler";
 
@@ -43,6 +43,7 @@ export const AppDataSource = new DataSource({
   password: process.env.PG_PASS,
   database: process.env.DATABASE,
   entities: [Bootcamp, Course],
+  subscribers: [CourseSubscriber],
   logging: false,
   // Turn this to false in production:
   synchronize: true,
