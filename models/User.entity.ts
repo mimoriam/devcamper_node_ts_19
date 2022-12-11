@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { IsEmail, IsString, Length } from "class-validator";
+
 import bcrypt from "bcryptjs";
 import { sign } from "jsonwebtoken";
 
@@ -40,7 +41,9 @@ export class User {
    * Auto-generated entries start here:
    * ***/
 
-  @Column({ select: false })
+  // Instead of select: false, use class-transformer's @Exclude()
+  // @Column({ select: false })
+  @Column()
   @Length(5)
   password: string;
 
@@ -61,5 +64,15 @@ export class User {
   async hashPassword() {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+  }
+
+  getSignedJwtToken() {
+    return sign({ id: this.id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRE,
+    });
+  }
+
+  async matchPassword(enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
   }
 }

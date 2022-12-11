@@ -14,20 +14,32 @@ import {
 const router = Router();
 import { router as courseRouter } from "./courses.routes";
 
+import { protect, authorize } from "../middleware/authHandler";
+
 router.route("/up").get(seedUpBootcamp);
 router.route("/down").get(seedDownBootcamp);
 
 // Parent router accessing child router:
 router.use("/:bootcampId/courses", courseRouter);
 
-router.route("/").get(getBootcamps).post(createBootcamp);
+router
+  .route("/")
+  .get(getBootcamps)
+  .post(protect, authorize("publisher", "admin"), createBootcamp);
 
 router
   .route("/:id")
   .get(getBootcamp)
-  .put(updateBootcamp)
-  .delete(deleteBootcamp);
+  .put(protect, authorize("publisher", "admin"), updateBootcamp)
+  .delete(protect, authorize("publisher", "admin"), deleteBootcamp);
 
-router.route("/:id/multer").put(uploadViaMulter, bootcampMulterUpload);
+router
+  .route("/:id/multer")
+  .put(
+    protect,
+    authorize("publisher", "admin"),
+    uploadViaMulter,
+    bootcampMulterUpload
+  );
 
 export { router };
