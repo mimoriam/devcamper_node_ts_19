@@ -5,6 +5,8 @@ import { asyncHandler } from "../middleware/asyncHandler";
 import { AppDataSource } from "../app";
 import { User } from "../models/User.entity";
 import { ErrorResponse } from "../utils/errorResponse";
+import fs from "fs";
+import path from "path";
 
 // @desc      Register user
 // @route     POST /api/v1/auth/register
@@ -92,4 +94,29 @@ const sendTokenResponse = (user, statusCode, res) => {
   });
 };
 
-export { register, login, getMe };
+const seedUpUsers = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userRepo = AppDataSource.getRepository(User);
+
+    const users = JSON.parse(
+      fs.readFileSync(
+        `${path.join(__dirname, "../")}/_data/users.json`,
+        "utf-8"
+      )
+    );
+
+    const userEntities = userRepo.create(users);
+
+    await AppDataSource.createQueryBuilder()
+      .insert()
+      .into(User)
+      .values(userEntities)
+      .execute();
+
+    res.status(200).json({
+      success: true,
+    });
+  }
+);
+
+export { register, login, getMe, seedUpUsers };

@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryColumn,
   PrimaryGeneratedColumn,
 } from "typeorm";
@@ -10,6 +11,7 @@ import { IsEmail, IsString, Length } from "class-validator";
 
 import bcrypt from "bcryptjs";
 import { sign } from "jsonwebtoken";
+import { Bootcamp } from "./Bootcamp.entity";
 
 export enum RoleType {
   USER = "user",
@@ -59,6 +61,9 @@ export class User {
   /***
    * END
    * ***/
+
+  @OneToMany(() => Bootcamp, (bootcamp) => bootcamp.user, { cascade: true })
+  bootcamps: Bootcamp[];
 
   @BeforeInsert()
   async hashPassword() {

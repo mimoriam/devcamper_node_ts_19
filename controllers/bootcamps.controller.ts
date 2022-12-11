@@ -47,15 +47,35 @@ const bootcampMulterUpload = asyncHandler(async (req, res, next) => {
   const bootcampRepo: Repository<Bootcamp> =
     AppDataSource.getRepository(Bootcamp);
 
-  let bootcampToUpdate: Bootcamp = await bootcampRepo.findOneBy({
-    id: req.params.id,
-  });
+  // let bootcampToUpdate: Bootcamp = await bootcampRepo.findOneBy({
+  //   id: req.params.id,
+  // });
+
+  let bootcampToUpdate = await bootcampRepo
+    .createQueryBuilder("bootcamp")
+    .leftJoinAndSelect("bootcamp.user", "user")
+    .where("bootcamp.id = :bId", { bId: req.params.id })
+    .getOne();
 
   if (!bootcampToUpdate) {
     return next(
       new ErrorResponse(`Bootcamp not found with id of ${req.params.id}`, 404)
     );
   }
+
+  // Make sure is bootcamp owner:
+  if (
+    bootcampToUpdate.user.id.toString() !== req["user"].id &&
+    req["user"].role !== "admin"
+  ) {
+    return next(
+      new ErrorResponse(
+        `User ${req["user"].id} is not authorized to update this bootcamp`,
+        401
+      )
+    );
+  }
+
   const file = req.file;
 
   await bootcampRepo.update(req.params.id, {
@@ -361,9 +381,30 @@ const getBootcamp = asyncHandler(
 // @access    Private
 const createBootcamp = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    // Add User to body:
+    console.log(req["user"].id);
+    req.body.user = req["user"].id;
+
     const bootcamp = new Bootcamp();
     const bootcampRepo: Repository<Bootcamp> =
       AppDataSource.getRepository(Bootcamp);
+
+    // Check for published bootcamp
+    const publishedBootcamp = await bootcampRepo
+      .createQueryBuilder("bootcamp")
+      .leftJoinAndSelect("bootcamp.user", "user")
+      .where("bootcamp.user = :userId", { userId: req["user"].id })
+      .getOne();
+
+    // If the user is not an admin, they can only add one bootcamp
+    if (publishedBootcamp && req["user"].role !== "admin") {
+      return next(
+        new ErrorResponse(
+          `The user with ID ${req["user"].id} has already published a bootcamp`,
+          400
+        )
+      );
+    }
 
     const entity = Object.assign(bootcamp, req.body);
 
@@ -395,15 +436,38 @@ const updateBootcamp = asyncHandler(
     const bootcampRepo: Repository<Bootcamp> =
       AppDataSource.getRepository(Bootcamp);
 
-    let bootcampToUpdate: Bootcamp = await bootcampRepo.findOneBy({
-      id: req.params.id,
-    });
+    // let bootcampToUpdate: Bootcamp = await bootcampRepo.findOneBy({
+    //   id: req.params.id,
+    // });
+
+    let bootcampToUpdate = await bootcampRepo
+      .createQueryBuilder("bootcamp")
+      .leftJoinAndSelect("bootcamp.user", "user")
+      .where("bootcamp.id = :bId", { bId: req.params.id })
+      .getOne();
 
     if (!bootcampToUpdate) {
       return next(
         new ErrorResponse(`Bootcamp not found with id of ${req.params.id}`, 404)
       );
     }
+
+    // Make sure is bootcamp owner:
+    if (
+      bootcampToUpdate.user.id.toString() !== req["user"].id &&
+      req["user"].role !== "admin"
+    ) {
+      return next(
+        new ErrorResponse(
+          `User ${req["user"].id} is not authorized to update this bootcamp`,
+          401
+        )
+      );
+    }
+
+    console.log(bootcampToUpdate.user);
+    console.log(bootcampToUpdate.user.id);
+    console.log(req["user"].id);
 
     const bootcamp = new Bootcamp();
     const entity = Object.assign(bootcamp, req.body);
@@ -440,9 +504,15 @@ const deleteBootcamp = asyncHandler(
     const bootcampRepo: Repository<Bootcamp> =
       AppDataSource.getRepository(Bootcamp);
 
-    let bootcamp: Bootcamp = await bootcampRepo.findOneBy({
-      id: req.params.id,
-    });
+    // let bootcamp: Bootcamp = await bootcampRepo.findOneBy({
+    //   id: req.params.id,
+    // });
+
+    let bootcamp = await bootcampRepo
+      .createQueryBuilder("bootcamp")
+      .leftJoinAndSelect("bootcamp.user", "user")
+      .where("bootcamp.id = :bId", { bId: req.params.id })
+      .getOne();
 
     if (!bootcamp) {
       return next(
@@ -450,10 +520,23 @@ const deleteBootcamp = asyncHandler(
       );
     }
 
+    // Make sure is bootcamp owner:
+    if (
+      bootcamp.user.id.toString() !== req["user"].id &&
+      req["user"].role !== "admin"
+    ) {
+      return next(
+        new ErrorResponse(
+          `User ${req["user"].id} is not authorized to delete this bootcamp`,
+          401
+        )
+      );
+    }
+
     await bootcampRepo.delete(req.params.id);
 
     // Remove cache for newly deleted bootcamp:
-    await AppDataSource.queryResultCache.remove(["bootcamp_cache"]);
+    // await AppDataSource.queryResultCache.remove(["bootcamp_cache"]);
 
     res.status(200).json({
       success: true,
